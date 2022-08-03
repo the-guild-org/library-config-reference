@@ -110,6 +110,8 @@ If you wish to use **Aggregated Releases** feature (to create a single, unified 
 
 8. Install the Changesets bot in your repository, in order to get automatic comments and warnings on missed/planned changesets: https://github.com/apps/changeset-bot 
 
+9. If you have some old / legacy config for setting the Git / NPM / npmrc credentials, just heads up that you can now remove all of these. 
+
 ### Automated Canary Release Flow 
 
 Tools involved:
@@ -128,7 +130,7 @@ To setup automated release flow for your package, using `changesets`, based on P
   // ... other stuff ...
   "snapshot": {
     "useCalculatedVersion": true,
-    "prereleaseTemplate": "{tag}-{commit}.{datetime}"
+    "prereleaseTemplate": "{tag}-{datetime}-{commit}"
   }
 }
 ```
@@ -140,8 +142,7 @@ To setup automated release flow for your package, using `changesets`, based on P
 ```json
 {
   "scripts": {
-    "release": "yarn build && changeset publish",
-    "release:snapshot": "yarn build && changeset publish --no-git-tag --snapshot alpha"
+    "release": "yarn build && changeset publish"
   }
 }
 ```
@@ -151,41 +152,15 @@ To setup automated release flow for your package, using `changesets`, based on P
 4. Create a new GitHub Action pipeline, similar to the one you have for releases, that does the following:
 
 ```yaml
-      - name: Release Snapshot # This will run your actual release script and will make sure to capture the output
+      - name: Release Canary
         id: canary
-        uses: 'kamilkisiela/release-canary@master'
+        uses: 'the-guild-org/changesets-snapshot-action@main'
+        with:
+          tag: alpha
+          prepareScript: 'yarn build' # this runs after "version" and before "publish"
         env:
+          NPM_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        with:
-          npm-token: ${{ secrets.NPM_TOKEN }}
-          npm-script: 'yarn release:snapshot'
-          changesets: true
-
-      - name: Publish a message
-        if: steps.canary.outputs.released == 'true'
-        uses: 'kamilkisiela/pr-comment@master'
-        with:
-          commentKey: canary
-          message: |
-            The latest changes of this PR are available as canary in npm (based on the declared `changesets`):
-            ```
-            ${{ steps.canary.outputs.changesetsPublishedPackages}}
-            ```
-          bot-token: ${{ secrets.GITHUB_TOKEN }}
-          bot: 'github-actions[bot]'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish a empty message
-        if: steps.canary.outputs.released == 'false'
-        uses: 'kamilkisiela/pr-comment@master'
-        with:
-          commentKey: canary
-          message: |
-            The latest changes of this PR are not available as canary, since there are no linked `changesets` for this PR.
-          bot-token: ${{ secrets.GITHUB_TOKEN }}
-          bot: 'github-actions[bot]'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Also, make sure you pipeline is configured for the following triggers:
@@ -199,6 +174,36 @@ on:
 
 5. You can now create Pull Requests and add `changeset` to your PRs, and you should get autoamtic snapshot releases for your package 🎉
 
+### Manual Dispatch of Canary/Prerelease
+
+If you wish to extend the Snapshot releases and allow manually running of GH Actions workflows, you can easily add to your Snapshot workflow:
+
+```yaml
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.changeset/**/*.md'
+  workflow_dispatch:
+    inputs:
+      npmTag:
+        description: 'NPM Tag'
+        required: true
+        default: 'alpha'
+```
+
+Adjust the `job`'s `if`:
+
+```yaml
+if: github.event.pull_request.head.repo.full_name == github.repository || github.event.inputs.onDemand == 'yes'
+```
+
+And configure the canary release tag:
+
+```
+tag: ${{github.event.inputs.npmTag || 'alpha'}}
+```
 
 ### Automated Dependencies Updates 
 

@@ -21,7 +21,10 @@ Make sure to adjust you Changesets config file, based on your repo setup:
 ```json
 {
   "$schema": "https://unpkg.com/@changesets/config@2.1.0/schema.json",
-  "changelog": "@changesets/cli/changelog",
+  "changelog": [
+    "@changesets/changelog-github", // this will make nice output for changesets, with "thank you..." notes, and liks to the commits + references in PRs!
+    { "repo": "guild-member/project-repo" } // Set the repo name here
+  ],
   "commit": false,
   "linked": [],
   "access": "public",
@@ -58,6 +61,15 @@ After creating your token, make sure to add it as part of your GitHub Actions Se
 
 ```
 NPM_TOKEN="..."
+```
+
+You should also make sure to setup `.npmrc` correctly with your action:
+
+```yaml
+      - name: Setup NPM credentials
+        run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
 6. Configure GitHub Actions permissions: Go to repo Settings > Actions > General and make sure to configure the following:
@@ -108,13 +120,90 @@ Tools involved:
 To setup automated release flow for your package, using `changesets`, based on PR changes, use the following setup:
 
 1. Follow all the instructions from `Automated Release Flow`. Once you get stable releases working, you can now set the canary releases (Note: Make sure to have at least oen stable release first) 
-2. 
+2. To setup snapshot/canary releases, start by updating your changesets `config.json` to use the following:
+
+```json
+{
+  "$schema": "https://unpkg.com/@changesets/config@2.1.0/schema.json",
+  // ... other stuff ...
+  "snapshot": {
+    "useCalculatedVersion": true,
+    "prereleaseTemplate": "{tag}-{commit}.{datetime}"
+  }
+}
+```
+
+> You can customize the canary release template, see: https://github.com/changesets/changesets/blob/main/docs/config-file-options.md#prereleasetemplate-optional-string
+
+3. Create a new script for running Changesets release in snapshot mode. This should match your `release` script requirements:
+
+```json
+{
+  "scripts": {
+    "release": "yarn build && changeset publish",
+    "release:snapshot": "yarn build && changeset publish --no-git-tag --snapshot alpha"
+  }
+}
+```
+
+> You can choose the NPM tag of the release, by changing the value of the snapshot CLI flag. We prefer using `alpha` or `canary` for PR-based releases. 
+
+4. Create a new GitHub Action pipeline, similar to the one you have for releases, that does the following:
+
+```yaml
+      - name: Release Snapshot # This will run your actual release script and will make sure to capture the output
+        id: canary
+        uses: 'kamilkisiela/release-canary@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          npm-script: 'yarn release:snapshot'
+          changesets: true
+
+      - name: Publish a message
+        if: steps.canary.outputs.released == 'true'
+        uses: 'kamilkisiela/pr-comment@master'
+        with:
+          commentKey: canary
+          message: |
+            The latest changes of this PR are available as canary in npm (based on the declared `changesets`):
+            ```
+            ${{ steps.canary.outputs.changesetsPublishedPackages}}
+            ```
+          bot-token: ${{ secrets.GITHUB_TOKEN }}
+          bot: 'github-actions[bot]'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish a empty message
+        if: steps.canary.outputs.released == 'false'
+        uses: 'kamilkisiela/pr-comment@master'
+        with:
+          commentKey: canary
+          message: |
+            The latest changes of this PR are not available as canary, since there are no linked `changesets` for this PR.
+          bot-token: ${{ secrets.GITHUB_TOKEN }}
+          bot: 'github-actions[bot]'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Also, make sure you pipeline is configured for the following triggers:
+
+```yaml
+on:
+  pull_request:
+    paths:
+      - '.changeset/**/*.md'
+```
+
+5. You can now create Pull Requests and add `changeset` to your PRs, and you should get autoamtic snapshot releases for your package 🎉
 
 
 ### Automated Dependencies Updates 
 
 Tools involved:
-- Changesets
 - Renovate
+- Changesets
 - GitHub Actions
 

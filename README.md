@@ -14,7 +14,7 @@ Tools involved:
 To setup automated release flow for your package, using `changesets`:
 
 1. Create a monorepo, either by using `yarn` (v1) or `pnpm`.
-2. Install and initialize the Changesets config by following these instructions: https://github.com/changesets/changesets/blob/main/docs/intro-to-using-changesets.md 
+2. Install and initialize the Changesets config by following these instructions: https://github.com/changesets/changesets/blob/main/docs/intro-to-using-changesets.md (also make sure to install `@changesets/changelog-github`) 
 
 Make sure to adjust you Changesets config file, based on your repo setup:
 

@@ -224,27 +224,22 @@ To setup autoamtic dependencies updates, follow these instructions:
   - Default mode: without a configuration file: you get a PR for every change. If you choose this mode, make sure to have `renovate.json` config file with the minimal configo of `"labels": ["dependencies"]`
   - Aggregated mode: using [this config file](https://github.com/the-guild-org/shared-config/blob/main/renovate.json) to get PRs after work hours, where all patch-releases are grouped together into a single PR
   
-4. To get automatic changesets created for Renovate PRs, add the following GitHub Action workflow to your repo:
+4. To get automatic changesets created for Renovate PRs (and manual dependencies changes), add the following GitHub Action workflow to your repo:
 
 ```yaml
-name: Renovate Changeset
-on:
-  pull_request:
-    types: [labeled, synchronize]
-    
+name: dependencies
+on: pull_request  
 jobs:
   changeset:
-    if: ${{ github.event.label.name == 'dependencies' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Add Changeset
-        uses: generates/changeset-action@v3.0.0
-      - name: Commit Changes
-        uses: generates/commit-action@v1.0.2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create/Update Changesets
+        uses: 'the-guild-org/changesets-dependencies-action@main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```

@@ -222,8 +222,15 @@ To setup autoamtic dependencies updates, follow these instructions:
 2. Wait for Renovate to create the first setup PR and merge it. 
 3. Choose what mode do you want for Renovate:
   - Default mode: without a configuration file: you get a PR for every change. If you choose this mode, make sure to have `renovate.json` config file with the minimal configo of `"labels": ["dependencies"]`
-  - Aggregated mode: using [this config file](https://github.com/the-guild-org/shared-config/blob/main/renovate.json) to get PRs after work hours, where all patch-releases are grouped together into a single PR
+  - Aggregated mode: using the following `renovate.json` config to get PRs after work hours, where all patch-releases are grouped together into a single PR
   
+```json
+{
+  "extends": ["github>the-guild-org/shared-config:renovate"]
+}
+```
+  
+
 4. To get automatic changesets created for Renovate PRs (and manual dependencies changes), add the following GitHub Action workflow to your repo:
 
 ```yaml

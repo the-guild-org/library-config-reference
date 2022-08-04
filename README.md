@@ -80,6 +80,13 @@ You should also make sure to setup `.npmrc` correctly with your action:
 7. Create a GitHub Actions workflow with your needs, and eventually make sure to add a Step for running your `changesets` script:
 
 ```yaml
+      - name: set version variables
+        id: vars
+        shell: bash
+        run: |
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@master

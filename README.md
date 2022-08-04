@@ -187,6 +187,10 @@ on:
       - '.changeset/**/*.md'
   workflow_dispatch:
     inputs:
+      onDemand:
+        description: 'Are you sure?'
+        required: true
+        default: 'yes'
       npmTag:
         description: 'NPM Tag'
         required: true

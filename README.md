@@ -104,6 +104,13 @@ You should also make sure to setup `.npmrc` correctly with your action:
 If you wish to use **Aggregated Releases** feature (to create a single, unified GitHub Release, instead of many), you can change the configuration to use this:
 
 ```yaml
+      - name: set version variables
+        id: vars
+        shell: bash
+        run: |
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
       - name: Create Release Pull Request or Publish to npm
         uses: dotansimha/changesets-action@1bd10e16a393db098c8f537c719621962c0d5571 # temporary, we are trying to get this merged
         with: # you can still use all other flags from before 

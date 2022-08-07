@@ -105,7 +105,7 @@ If you wish to use **Aggregated Releases** feature (to create a single, unified 
 
 ```yaml
       - name: Create Release Pull Request or Publish to npm
-        uses: dotansimha/changesets-action@262e957f99be29087d2b13afa32a5d579bf1d080 # temporary, we are trying to get this merged
+        uses: dotansimha/changesets-action@1bd10e16a393db098c8f537c719621962c0d5571 # temporary, we are trying to get this merged
         with: # you can still use all other flags from before 
           publish: yarn release
           createGithubReleases: aggregate 

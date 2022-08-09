@@ -63,15 +63,6 @@ After creating your token, make sure to add it as part of your GitHub Actions Se
 NPM_TOKEN="..."
 ```
 
-You should also make sure to setup `.npmrc` correctly with your action:
-
-```yaml
-      - name: Setup NPM credentials
-        run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
-
 6. Configure GitHub Actions permissions: Go to repo Settings > Actions > General and make sure to configure the following:
 
   - `Actions permissions` should be set to `Allow all actions and reusable workflows`

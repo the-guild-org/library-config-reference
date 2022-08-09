@@ -164,7 +164,7 @@ To setup automated release flow for your package, using `changesets`, based on P
           tag: alpha
           prepareScript: 'yarn build' # this runs after "version" and before "publish"
         env:
-          NPM_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
@@ -243,6 +243,7 @@ name: dependencies
 on: pull_request  
 jobs:
   changeset:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

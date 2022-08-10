@@ -103,7 +103,7 @@ If you wish to use **Aggregated Releases** feature (to create a single, unified 
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
       - name: Create Release Pull Request or Publish to npm
-        uses: dotansimha/changesets-action@1bd10e16a393db098c8f537c719621962c0d5571 # temporary, we are trying to get this merged
+        uses: dotansimha/changesets-action@v1.3.1 # temporary, we are trying to get this merged
         with: # you can still use all other flags from before 
           publish: yarn release
           createGithubReleases: aggregate 
@@ -159,7 +159,7 @@ To setup automated release flow for your package, using `changesets`, based on P
 ```yaml
       - name: Release Canary
         id: canary
-        uses: 'the-guild-org/changesets-snapshot-action@main'
+        uses: 'the-guild-org/changesets-snapshot-action@v0.0.1'
         with:
           tag: alpha
           prepareScript: 'yarn build' # this runs after "version" and before "publish"
